@@ -23,10 +23,13 @@ import java.util.concurrent.ConcurrentMap;
  * Manager of all protocols
  *
  * @author tsui
- * @version $Id: ProtocolManager.java, v 0.1 2018-03-27 15:18 tsui Exp $
+ * @version $Id : ProtocolManager.java, v 0.1 2018-03-27 15:18 tsui Exp $
  */
 public class ProtocolManager {
 
+    /**
+     * 管理所有的自定义rpc协议
+     */
     private static final ConcurrentMap<ProtocolCode, Protocol> protocols = new ConcurrentHashMap<ProtocolCode, Protocol>();
 
     public static Protocol getProtocol(ProtocolCode protocolCode) {

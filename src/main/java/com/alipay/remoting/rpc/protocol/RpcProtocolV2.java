@@ -36,7 +36,7 @@ import com.alipay.remoting.rpc.RpcCommandFactory;
  * +                                                                                                +
  * |                               ... ...                                  | CRC32(optional)       |
  * +------------------------------------------------------------------------------------------------+
- * 
+ *
  * proto: code for protocol
  * ver1: version for protocol
  * type: request/response/request oneway
@@ -61,9 +61,12 @@ import com.alipay.remoting.rpc.RpcCommandFactory;
  * |                               ... ...                                  | CRC32(optional)       |
  * +------------------------------------------------------------------------------------------------+
  * respstatus: response status
- * 
+ *
  * @author jiangping
  * @version $Id: RpcProtocolV2.java, v 0.1 2017-05-27 PM7:04:04 tao Exp $
+ *
+ *
+ *  兼容V1的RpcProtocol
  */
 public class RpcProtocolV2 implements Protocol {
     /* because the design defect, the version is neglected in RpcProtocol, so we design RpcProtocolV2 and add protocol version. */
@@ -77,6 +80,8 @@ public class RpcProtocolV2 implements Protocol {
      * in contrast to protocol v1,
      * one more byte is used as protocol version,
      * and another one is userd as protocol switch
+     *
+     *  多了protocol的version 和 开关switch，和可选的CRC
      */
     private static final int REQUEST_HEADER_LEN  = 22 + 2;
     private static final int RESPONSE_HEADER_LEN = 20 + 2;

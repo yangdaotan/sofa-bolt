@@ -41,7 +41,7 @@ public class InvokeContext {
 
     // ~~~ invoke context keys of bolt client and server side
     public final static String                BOLT_INVOKE_REQUEST_ID = "bolt.invoke.request.id";
-    /** time consumed start from the time when request arrive, to the time when request be processed, this is a timespan */
+    /** time consumed start from the time when request arrive, to the time when request be processed, this is a time span */
     public final static String                BOLT_PROCESS_WAIT_TIME = "bolt.invoke.wait.time";
     public final static String                BOLT_CUSTOM_SERIALIZER = "bolt.invoke.custom.serializer";
     public final static String                BOLT_CRC_SWITCH        = "bolt.invoke.crc.switch";
@@ -85,18 +85,20 @@ public class InvokeContext {
      * @param key
      * @return
      */
+    @SuppressWarnings("unchecked")
     public <T> T get(String key) {
         return (T) this.context.get(key);
     }
 
     /**
      * get and use default if not found
-     * 
+     *
      * @param key
      * @param defaultIfNotFound
      * @param <T>
      * @return
      */
+    @SuppressWarnings("unchecked")
     public <T> T get(String key, T defaultIfNotFound) {
         return this.context.get(key) != null ? (T) this.context.get(key) : defaultIfNotFound;
     }

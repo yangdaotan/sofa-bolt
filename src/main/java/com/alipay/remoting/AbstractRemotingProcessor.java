@@ -25,7 +25,7 @@ import com.alipay.remoting.util.RemotingUtil;
 
 /**
  * Processor to process remoting command.
- * 
+ *
  * @author jiangping
  * @version $Id: RemotingProcessor.java, v 0.1 2015-9-6 PM2:50:51 tao Exp $
  * @param <T>
@@ -69,7 +69,7 @@ public abstract class AbstractRemotingProcessor<T extends RemotingCommand> imple
 
     /**
      * Do the process.
-     * 
+     *
      * @param ctx
      * @param msg
      * @throws Exception
@@ -78,7 +78,7 @@ public abstract class AbstractRemotingProcessor<T extends RemotingCommand> imple
 
     /**
      * Process the remoting command with its own executor or with the defaultExecutor if its own if null.
-     * 
+     *
      * @param ctx
      * @param msg
      * @param defaultExecutor
@@ -97,18 +97,20 @@ public abstract class AbstractRemotingProcessor<T extends RemotingCommand> imple
 
     /**
      * Getter method for property <tt>executor</tt>.
-     * 
+     *
      * @return property value of executor
      */
+    @Override
     public ExecutorService getExecutor() {
         return executor;
     }
 
     /**
      * Setter method for property <tt>executor</tt>.
-     * 
+     *
      * @param executor value to be assigned to property executor
      */
+    @Override
     public void setExecutor(ExecutorService executor) {
         this.executor = executor;
     }
@@ -123,7 +125,7 @@ public abstract class AbstractRemotingProcessor<T extends RemotingCommand> imple
 
     /**
      * Task for asynchronous process.
-     * 
+     *
      * @author jiangping
      * @version $Id: RemotingProcessor.java, v 0.1 2015-10-14 PM7:40:44 tao Exp $
      */
@@ -137,7 +139,7 @@ public abstract class AbstractRemotingProcessor<T extends RemotingCommand> imple
             this.msg = msg;
         }
 
-        /** 
+        /**
          * @see java.lang.Runnable#run()
          */
         @Override

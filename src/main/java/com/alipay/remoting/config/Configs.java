@@ -14,42 +14,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.remoting;
+package com.alipay.remoting.config;
 
 import com.alipay.remoting.serialization.SerializerManager;
 
 /**
- * Configuration items.
+ * Define the key for a certain config item using system property,
+ *   and provide the default value for that config item.
  *
- * @author jiangping
- * @version $Id: ConfigKeys.java, v 0.1 2015-10-10 PM3:01:50 tao Exp $
+ * @author tsui
+ * @version $Id: Configs.java, v 0.1 2017-08-03 19:21 tsui Exp $
  */
 public class Configs {
     // ~~~ configs and default values for bootstrap
 
     /** TCP_NODELAY option */
+    // 禁用Nagle算法
     public static final String TCP_NODELAY                           = "bolt.tcp.nodelay";
     public static final String TCP_NODELAY_DEFAULT                   = "true";
 
     /** TCP SO_REUSEADDR option */
+    // 重启后能重用未被释放的端口
     public static final String TCP_SO_REUSEADDR                      = "bolt.tcp.so.reuseaddr";
     public static final String TCP_SO_REUSEADDR_DEFAULT              = "true";
 
     /** TCP SO_BACKLOG option */
+    // tcp accept queue缓存大小，可以改为65535
     public static final String TCP_SO_BACKLOG                        = "bolt.tcp.so.backlog";
     public static final String TCP_SO_BACKLOG_DEFAULT                = "1024";
 
     /** TCP SO_KEEPALIVE option */
+    // keeplive是否开启，对客户端有用
     public static final String TCP_SO_KEEPALIVE                      = "bolt.tcp.so.keepalive";
     public static final String TCP_SO_KEEPALIVE_DEFAULT              = "true";
 
     /** Netty ioRatio option*/
+    // io任务和其他任务的处理比例
     public static final String NETTY_IO_RATIO                        = "bolt.netty.io.ratio";
     public static final String NETTY_IO_RATIO_DEFAULT                = "70";
 
-    /** Netty buffer allocator */
+    /** Netty buffer allocator, enabled as default */
+    // 内存缓冲分配器，高性能可以开启，默认禁止
     public static final String NETTY_BUFFER_POOLED                   = "bolt.netty.buffer.pooled";
-    public static final String NETTY_BUFFER_POOLED_DEFAULT           = "false";
+    public static final String NETTY_BUFFER_POOLED_DEFAULT           = "true";
 
     /** Netty buffer high watermark */
     public static final String NETTY_BUFFER_HIGH_WATERMARK           = "bolt.netty.buffer.high.watermark";
@@ -58,6 +65,14 @@ public class Configs {
     /** Netty buffer low watermark */
     public static final String NETTY_BUFFER_LOW_WATERMARK            = "bolt.netty.buffer.low.watermark";
     public static final String NETTY_BUFFER_LOW_WATERMARK_DEFAULT    = Integer.toString(32 * 1024);
+
+    /** Netty epoll switch */
+    public static final String NETTY_EPOLL_SWITCH                    = "bolt.netty.epoll.switch";
+    public static final String NETTY_EPOLL_SWITCH_DEFAULT            = "true";
+
+    /** Netty epoll level trigger enabled */
+    public static final String NETTY_EPOLL_LT                        = "bolt.netty.epoll.lt";
+    public static final String NETTY_EPOLL_LT_DEFAULT                = "true";
 
     // ~~~ configs and default values for idle
 
@@ -78,7 +93,7 @@ public class Configs {
     public static final String TCP_SERVER_IDLE_DEFAULT               = "90000";
 
     // ~~~ configs and default values for connection manager
-
+    // 连接管理器线程池的配置：min、max、queue size、
     /** Thread pool min size for the connection manager executor */
     public static final String CONN_CREATE_TP_MIN_SIZE               = "bolt.conn.create.tp.min";
     public static final String CONN_CREATE_TP_MIN_SIZE_DEFAULT       = "3";
@@ -96,6 +111,7 @@ public class Configs {
     public static final String CONN_CREATE_TP_KEEPALIVE_TIME_DEFAULT = "60";
 
     /** Default connect timeout value, time unit: ms  */
+    // 连接超时时间
     public static final int    DEFAULT_CONNECT_TIMEOUT               = 1000;
 
     /** default connection number per url */
@@ -161,6 +177,7 @@ public class Configs {
     public static final String CONN_THRESHOLD_DEFAULT                = "3";
 
     /** Retry detect period for ScheduledDisconnectStrategy */
+    // 断连事件线程间隔
     public static final String RETRY_DETECT_PERIOD                   = "bolt.retry.delete.period";
     public static final String RETRY_DETECT_PERIOD_DEFAULT           = "5000";
 

@@ -31,7 +31,10 @@ import io.netty.channel.ChannelHandlerContext;
 
 /**
  * Encode remoting command into ByteBuf.
- * 
+ *
+ *   【针对RpcProtocol的Encode方式】
+ *   @see com.alipay.remoting.rpc.protocol.RpcProtocol
+ *
  * @author jiangping
  * @version $Id: RpcCommandEncoder.java, v 0.1 2015-8-31 PM8:11:27 tao Exp $
  */
@@ -61,6 +64,30 @@ public class RpcCommandEncoder implements CommandEncoder {
                  * className
                  * header
                  * content
+                 *
+ *  * Request command protocol for v1
+ * 0     1     2           4           6           8          10           12          14         16
+ * +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+ * |proto| type| cmdcode   |ver2 |   requestId           |codec|        timeout        |  classLen |
+ * +-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+
+ * |headerLen  | contentLen            |                             ... ...                       |
+ * +-----------+-----------+-----------+                                                                                               +
+ * |               className + header  + content  bytes                                            |
+ * +                                                                                               +
+ * |                               ... ...                                                         |
+ * +-----------------------------------------------------------------------------------------------+
+ *
+ * * Response command protocol for v1
+ * 0     1     2     3     4           6           8          10           12          14         16
+ * +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
+ * |proto| type| cmdcode   |ver2 |   requestId           |codec|respstatus |  classLen |headerLen  |
+ * +-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+
+ * | contentLen            |                  ... ...                                              |
+ * +-----------------------+                                                                       +
+ * |                         className + header  + content  bytes                                  |
+ * +                                                                                               +
+ * |                               ... ...                                                         |
+ * +-----------------------------------------------------------------------------------------------+
                  */
                 RpcCommand cmd = (RpcCommand) msg;
                 out.writeByte(RpcProtocol.PROTOCOL_CODE);
@@ -68,6 +95,7 @@ public class RpcCommandEncoder implements CommandEncoder {
                 out.writeShort(((RpcCommand) msg).getCmdCode().value());
                 out.writeByte(cmd.getVersion());
                 out.writeInt(cmd.getId());
+                // codec
                 out.writeByte(cmd.getSerializer());
                 if (cmd instanceof RequestCommand) {
                     //timeout

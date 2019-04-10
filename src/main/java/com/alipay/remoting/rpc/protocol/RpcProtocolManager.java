@@ -19,9 +19,13 @@ package com.alipay.remoting.rpc.protocol;
 import com.alipay.remoting.ProtocolManager;
 
 /**
+ * Protocol manager.
  *
  * @author tsui
  * @version $Id: RpcProtocols.java, v 0.1 2018-03-27 19:42 tsui Exp $
+ *
+ *  rpc协议管理器，注册rpc协议到协议管理器
+ *  后面处理的时候从ProtocolManager取出协议code对应的协议处理
  */
 public class RpcProtocolManager {
     public static final int DEFAULT_PROTOCOL_CODE_LENGTH = 1;

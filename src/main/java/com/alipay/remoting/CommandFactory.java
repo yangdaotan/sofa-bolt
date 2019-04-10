@@ -20,7 +20,7 @@ import java.net.InetSocketAddress;
 
 /**
  * Command factory
- * 
+ *
  * @author xiaomin.cxm
  * @version $Id: CommandFactory.java, v 0.1 Mar 10, 2016 11:24:24 AM yunliang.shi Exp $
  */
@@ -54,6 +54,9 @@ public interface CommandFactory {
 
     <T extends RemotingCommand> T createExceptionResponse(int id, ResponseStatus status);
 
+    <T extends RemotingCommand> T createExceptionResponse(int id, ResponseStatus status,
+                                                          final Throwable t);
+
     <T extends RemotingCommand> T createTimeoutResponse(final InetSocketAddress address);
 
     <T extends RemotingCommand> T createSendFailedResponse(final InetSocketAddress address,
@@ -61,4 +64,5 @@ public interface CommandFactory {
 
     <T extends RemotingCommand> T createConnectionClosedResponse(final InetSocketAddress address,
                                                                  String message);
+
 }

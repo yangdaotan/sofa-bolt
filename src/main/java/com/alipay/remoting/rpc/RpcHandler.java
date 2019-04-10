@@ -26,17 +26,31 @@ import com.alipay.remoting.ProtocolManager;
 import com.alipay.remoting.RemotingContext;
 import com.alipay.remoting.rpc.protocol.UserProcessor;
 
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelHandler.Sharable;
 
 /**
  * Dispatch messages to corresponding protocol.
- * 
+ *
+ *
+ *  protocolCode -> Protocol -> CommandHandler -> RemotingProcessor -> className -> userProcessor -> handle
+ *
+ * 1. 获取Connection的protocolCode
+ * 2. 根据protocolCode找到Protocol: RpcProtocol或者RpcProtocol2
+ * 3. Protocol对应的CommandHandler: RpcCommandHandler
+ * 4. RpcCommandHandler变量ProcessorManager管理RemotingProcessor，根据commandCode找到对应RemotingProcessor
+ *      - RPC_REQUEST: RpcRequestProcessor
+ *      - RPC_RESPONSE: RpcResponseProcessor
+ *      - HEARTBEAT: RpcHeartBeatProcessor
+ *
+ * 5. 找到RpcRequestProcessor取出command中的className，找到对应的userProcessor进行处理
+ *
+ *
  * @author jiangping
  * @version $Id: RpcHandler.java, v 0.1 2015-12-14 PM4:01:37 tao Exp $
  */
-@Sharable
+@ChannelHandler.Sharable
 public class RpcHandler extends ChannelInboundHandlerAdapter {
     private boolean                                     serverSide;
 

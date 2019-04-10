@@ -25,20 +25,21 @@ import org.slf4j.LoggerFactory;
 import com.alipay.remoting.CommandCode;
 import com.alipay.remoting.CommandDecoder;
 import com.alipay.remoting.ResponseStatus;
+import com.alipay.remoting.config.switches.ProtocolSwitch;
 import com.alipay.remoting.rpc.HeartbeatAckCommand;
 import com.alipay.remoting.rpc.HeartbeatCommand;
 import com.alipay.remoting.rpc.RequestCommand;
 import com.alipay.remoting.rpc.ResponseCommand;
 import com.alipay.remoting.rpc.RpcCommandType;
 import com.alipay.remoting.util.CrcUtil;
-import com.alipay.remoting.util.ProtocolSwitch;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 
 /**
  * Command decoder for Rpc v2.
- * 
+ *     【针对RpcProtocol的Decode方式】
+ *     @see com.alipay.remoting.rpc.protocol.RpcProtocolV2
  * @author jiangping
  * @version $Id: RpcCommandDecoderV2.java, v 0.1 2017-05-27 PM5:15:26 tao Exp $
  */
@@ -152,10 +153,8 @@ public class RpcCommandDecoderV2 implements CommandDecoder {
                             command.setContent(content);
 
                             out.add(command);
-
                         } else {
                             in.resetReaderIndex();
-                            return;
                         }
                     } else if (type == RpcCommandType.RESPONSE) {
                         //decode response
@@ -227,7 +226,6 @@ public class RpcCommandDecoderV2 implements CommandDecoder {
                             out.add(command);
                         } else {
                             in.resetReaderIndex();
-                            return;
                         }
                     } else {
                         String emsg = "Unknown command type: " + type;

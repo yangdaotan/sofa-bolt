@@ -36,16 +36,17 @@ import com.alipay.remoting.rpc.RpcCommandFactory;
  * +                                                                                               +
  * |                               ... ...                                                         |
  * +-----------------------------------------------------------------------------------------------+
- * 
+ *
  * proto: code for protocol
  * type: request/response/request oneway
  * cmdcode: code for remoting command
- * ver2:version for remoting command
+ * ver2:version for remoting command 不同版本对于的command处理方式不同
  * requestId: id of request
  * codec: code for codec
+ * timeout：timeout for client from request to response
  * headerLen: length of header
  * contentLen: length of content
- * 
+ *
  * Response command protocol for v1
  * 0     1     2     3     4           6           8          10           12          14         16
  * +-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+
@@ -58,9 +59,25 @@ import com.alipay.remoting.rpc.RpcCommandFactory;
  * |                               ... ...                                                         |
  * +-----------------------------------------------------------------------------------------------+
  * respstatus: response status
- * 
+ *
  * @author jiangping
  * @version $Id: RpcProtocol.java, v 0.1 2015-9-28 PM7:04:04 tao Exp $
+ *
+ * 一个协议就是对传输内容以及排列方式的约定，可以让client和server进行解析和应答，即：
+ *      约定request command、response command。
+ *
+ *    - 需要明确：
+ *      1、command的编解码commandEncoder、commandecoder
+ *      2、各种command code的语义以及相应的处理，commandHandler负责command code -> processor
+ *      3、协议对command的管理，由commandFactory负责
+ *      4、心跳处理 HeartbeatTrigger
+ *      5、编码需要序列化，解码需要反序列化，因此需要codec来表示序列化方式
+ *
+ *    - 协议内容
+ *      1、由header和body组成，一般可以有多个<header, body>
+ *      2、对于request、response可以设计一个通用的协议内容，也可以分开设计，有各种的header和body
+ *      3、为了扩展，会设计字段协议版本号version，这边是Protocol code
+ *
  */
 public class RpcProtocol implements Protocol {
     public static final byte PROTOCOL_CODE       = (byte) 1;
@@ -82,8 +99,6 @@ public class RpcProtocol implements Protocol {
 
     /**
      * Get the length of request header.
-     * 
-     * @return
      */
     public static int getRequestHeaderLength() {
         return RpcProtocol.REQUEST_HEADER_LEN;
@@ -91,8 +106,6 @@ public class RpcProtocol implements Protocol {
 
     /**
      * Get the length of response header.
-     * 
-     * @return
      */
     public static int getResponseHeaderLength() {
         return RpcProtocol.RESPONSE_HEADER_LEN;

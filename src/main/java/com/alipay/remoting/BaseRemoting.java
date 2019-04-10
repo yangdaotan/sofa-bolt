@@ -31,7 +31,13 @@ import io.netty.util.TimerTask;
 
 /**
  * Base remoting capability.
- * 
+ *
+ *      oneway
+ *      sync
+ *      future
+ *      callback
+ *
+ *
  * @author jiangping
  * @version $Id: BaseRemoting.java, v 0.1 Mar 4, 2016 12:09:56 AM tao Exp $
  */
@@ -47,12 +53,12 @@ public abstract class BaseRemoting {
 
     /**
      * Synchronous invocation
-     * 
+     *
      * @param conn
      * @param request
      * @param timeoutMillis
      * @return
-     * @throws InterruptedException 
+     * @throws InterruptedException
      * @throws RemotingException
      */
     protected RemotingCommand invokeSync(final Connection conn, final RemotingCommand request,
@@ -60,34 +66,32 @@ public abstract class BaseRemoting {
                                                                  InterruptedException {
         final InvokeFuture future = createInvokeFuture(request, request.getInvokeContext());
         conn.addInvokeFuture(future);
+        final int requestId = request.getId();
         try {
             conn.getChannel().writeAndFlush(request).addListener(new ChannelFutureListener() {
 
                 @Override
                 public void operationComplete(ChannelFuture f) throws Exception {
                     if (!f.isSuccess()) {
-                        conn.removeInvokeFuture(request.getId());
+                        conn.removeInvokeFuture(requestId);
                         future.putResponse(commandFactory.createSendFailedResponse(
                             conn.getRemoteAddress(), f.cause()));
-                        logger.error("Invoke send failed, id={}", request.getId(), f.cause());
+                        logger.error("Invoke send failed, id={}", requestId, f.cause());
                     }
                 }
 
             });
         } catch (Exception e) {
-            conn.removeInvokeFuture(request.getId());
-            if (future != null) {
-                future.putResponse(commandFactory.createSendFailedResponse(conn.getRemoteAddress(),
-                    e));
-            }
-            logger.error("Exception caught when sending invocation, id={}", request.getId(), e);
+            conn.removeInvokeFuture(requestId);
+            future.putResponse(commandFactory.createSendFailedResponse(conn.getRemoteAddress(), e));
+            logger.error("Exception caught when sending invocation, id={}", requestId, e);
         }
         RemotingCommand response = future.waitResponse(timeoutMillis);
 
         if (response == null) {
-            conn.removeInvokeFuture(request.getId());
+            conn.removeInvokeFuture(requestId);
             response = this.commandFactory.createTimeoutResponse(conn.getRemoteAddress());
-            logger.warn("Wait response, request id={} timeout!", request.getId());
+            logger.warn("Wait response, request id={} timeout!", requestId);
         }
 
         return response;
@@ -95,7 +99,7 @@ public abstract class BaseRemoting {
 
     /**
      * Invocation with callback.
-     * 
+     *
      * @param conn
      * @param request
      * @param invokeCallback
@@ -107,13 +111,12 @@ public abstract class BaseRemoting {
         final InvokeFuture future = createInvokeFuture(conn, request, request.getInvokeContext(),
             invokeCallback);
         conn.addInvokeFuture(future);
-
+        final int requestId = request.getId();
         try {
-            //add timeout
             Timeout timeout = TimerHolder.getTimer().newTimeout(new TimerTask() {
                 @Override
                 public void run(Timeout timeout) throws Exception {
-                    InvokeFuture future = conn.removeInvokeFuture(request.getId());
+                    InvokeFuture future = conn.removeInvokeFuture(requestId);
                     if (future != null) {
                         future.putResponse(commandFactory.createTimeoutResponse(conn
                             .getRemoteAddress()));
@@ -128,7 +131,7 @@ public abstract class BaseRemoting {
                 @Override
                 public void operationComplete(ChannelFuture cf) throws Exception {
                     if (!cf.isSuccess()) {
-                        InvokeFuture f = conn.removeInvokeFuture(request.getId());
+                        InvokeFuture f = conn.removeInvokeFuture(requestId);
                         if (f != null) {
                             f.cancelTimeout();
                             f.putResponse(commandFactory.createSendFailedResponse(
@@ -142,7 +145,7 @@ public abstract class BaseRemoting {
 
             });
         } catch (Exception e) {
-            InvokeFuture f = conn.removeInvokeFuture(request.getId());
+            InvokeFuture f = conn.removeInvokeFuture(requestId);
             if (f != null) {
                 f.cancelTimeout();
                 f.putResponse(commandFactory.createSendFailedResponse(conn.getRemoteAddress(), e));
@@ -155,7 +158,7 @@ public abstract class BaseRemoting {
 
     /**
      * Invocation with future returned.
-     * 
+     *
      * @param conn
      * @param request
      * @param timeoutMillis
@@ -166,12 +169,12 @@ public abstract class BaseRemoting {
 
         final InvokeFuture future = createInvokeFuture(request, request.getInvokeContext());
         conn.addInvokeFuture(future);
+        final int requestId = request.getId();
         try {
-            //add timeout
             Timeout timeout = TimerHolder.getTimer().newTimeout(new TimerTask() {
                 @Override
                 public void run(Timeout timeout) throws Exception {
-                    InvokeFuture future = conn.removeInvokeFuture(request.getId());
+                    InvokeFuture future = conn.removeInvokeFuture(requestId);
                     if (future != null) {
                         future.putResponse(commandFactory.createTimeoutResponse(conn
                             .getRemoteAddress()));
@@ -186,7 +189,7 @@ public abstract class BaseRemoting {
                 @Override
                 public void operationComplete(ChannelFuture cf) throws Exception {
                     if (!cf.isSuccess()) {
-                        InvokeFuture f = conn.removeInvokeFuture(request.getId());
+                        InvokeFuture f = conn.removeInvokeFuture(requestId);
                         if (f != null) {
                             f.cancelTimeout();
                             f.putResponse(commandFactory.createSendFailedResponse(
@@ -199,7 +202,7 @@ public abstract class BaseRemoting {
 
             });
         } catch (Exception e) {
-            InvokeFuture f = conn.removeInvokeFuture(request.getId());
+            InvokeFuture f = conn.removeInvokeFuture(requestId);
             if (f != null) {
                 f.cancelTimeout();
                 f.putResponse(commandFactory.createSendFailedResponse(conn.getRemoteAddress(), e));
@@ -208,11 +211,11 @@ public abstract class BaseRemoting {
                 RemotingUtil.parseRemoteAddress(conn.getChannel()), e);
         }
         return future;
-    };
+    }
 
     /**
      * Oneway invocation.
-     * 
+     *
      * @param conn
      * @param request
      * @throws InterruptedException
@@ -238,7 +241,7 @@ public abstract class BaseRemoting {
                     RemotingUtil.parseRemoteAddress(conn.getChannel()), e);
             }
         }
-    };
+    }
 
     /**
      * Create invoke future with {@link InvokeContext}.

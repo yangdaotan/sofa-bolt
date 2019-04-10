@@ -36,7 +36,10 @@ import io.netty.channel.ChannelHandlerContext;
 
 /**
  * Command decoder for Rpc.
- * 
+ *
+ *  【针对RpcProtocol的Decode方式】
+ *   @see com.alipay.remoting.rpc.protocol.RpcProtocol
+ *
  * @author jiangping
  * @version $Id: RpcCommandDecoder.java, v 0.1 2015-10-14 PM5:15:26 tao Exp $
  */
@@ -46,6 +49,7 @@ public class RpcCommandDecoder implements CommandDecoder {
 
     private int                 lessLen;
 
+    // 20bytes or 22bytes
     {
         lessLen = RpcProtocol.getResponseHeaderLength() < RpcProtocol.getRequestHeaderLength() ? RpcProtocol
             .getResponseHeaderLength() : RpcProtocol.getRequestHeaderLength();
@@ -57,7 +61,9 @@ public class RpcCommandDecoder implements CommandDecoder {
     @Override
     public void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         // the less length between response header and request header
+        // 严谨的话应该分开req和resp来判断最小头的大小
         if (in.readableBytes() >= lessLen) {
+            // 标记住ReadIndex的位置，配合resetReaderIndex使用
             in.markReaderIndex();
             byte protocol = in.readByte();
             in.resetReaderIndex();
@@ -78,12 +84,16 @@ public class RpcCommandDecoder implements CommandDecoder {
                  * header
                  * content
                  */
+
+                // 至少有Protocol 和 type
                 if (in.readableBytes() > 2) {
                     in.markReaderIndex();
-                    in.readByte(); //version
-                    byte type = in.readByte(); //type
+                    // 过掉protocol
+                    in.readByte();
+                    // type
+                    byte type = in.readByte();
                     if (type == RpcCommandType.REQUEST || type == RpcCommandType.REQUEST_ONEWAY) {
-                        //decode request
+                        //decode request，从cmdcode开始
                         if (in.readableBytes() >= RpcProtocol.getRequestHeaderLength() - 2) {
                             short cmdCode = in.readShort();
                             byte ver2 = in.readByte();
@@ -109,7 +119,7 @@ public class RpcCommandDecoder implements CommandDecoder {
                                     content = new byte[contentLen];
                                     in.readBytes(content);
                                 }
-                            } else {// not enough data
+                            } else {// not enough data，重置到最开始的index
                                 in.resetReaderIndex();
                                 return;
                             }
@@ -128,10 +138,8 @@ public class RpcCommandDecoder implements CommandDecoder {
                             command.setHeader(header);
                             command.setContent(content);
                             out.add(command);
-
                         } else {
                             in.resetReaderIndex();
-                            return;
                         }
                     } else if (type == RpcCommandType.RESPONSE) {
                         //decode response
@@ -166,7 +174,6 @@ public class RpcCommandDecoder implements CommandDecoder {
                             }
                             ResponseCommand command;
                             if (cmdCode == CommandCode.HEARTBEAT_VALUE) {
-
                                 command = new HeartbeatAckCommand();
                             } else {
                                 command = createResponseCommand(cmdCode);
@@ -185,7 +192,6 @@ public class RpcCommandDecoder implements CommandDecoder {
                             out.add(command);
                         } else {
                             in.resetReaderIndex();
-                            return;
                         }
                     } else {
                         String emsg = "Unknown command type: " + type;

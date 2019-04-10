@@ -22,23 +22,31 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import com.alipay.remoting.util.GlobalSwitch;
 import org.slf4j.Logger;
 
+import com.alipay.remoting.config.switches.GlobalSwitch;
 import com.alipay.remoting.log.BoltLoggerFactory;
 import com.alipay.remoting.util.RemotingUtil;
 import com.alipay.remoting.util.StringUtils;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
-import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.util.Attribute;
 
 /**
  * Log the channel status event.
- * 
+ *
+ *   ConnectionEventHandler被client和server都使用，所以两逻辑都放一起了，需要分情况看！！！！！
+ *
+ *
+ *  处理连接事件：
+ *      1 connect
+ *      2 disconnect
+ *      3 close
+ *
  * @author jiangping
  * @version $Id: ConnectionEventHandler.java, v 0.1 Oct 10, 2016 2:07:24 PM tao Exp $
  */
@@ -50,8 +58,10 @@ public class ConnectionEventHandler extends ChannelDuplexHandler {
 
     private ConnectionEventListener eventListener;
 
+    // 线程池异步处理ConnectionEvent事件
     private ConnectionEventExecutor eventExecutor;
 
+    // 客户端重连管理
     private ReconnectManager        reconnectManager;
 
     private GlobalSwitch            globalSwitch;
@@ -68,6 +78,7 @@ public class ConnectionEventHandler extends ChannelDuplexHandler {
      * @see io.netty.channel.ChannelDuplexHandler#connect(io.netty.channel.ChannelHandlerContext, java.net.SocketAddress, java.net.SocketAddress, io.netty.channel.ChannelPromise)
      */
     @Override
+    // 对server发起connect操作时调用，client --connect-> server，客户端才会调用
     public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress,
                         SocketAddress localAddress, ChannelPromise promise) throws Exception {
         if (logger.isInfoEnabled()) {
@@ -92,6 +103,7 @@ public class ConnectionEventHandler extends ChannelDuplexHandler {
      * @see io.netty.channel.ChannelDuplexHandler#disconnect(io.netty.channel.ChannelHandlerContext, io.netty.channel.ChannelPromise)
      */
     @Override
+    // 对server发起disconnect时候调用， client --disconnect-->server，客户端才调用
     public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
         infoLog("Connection disconnect to {}", RemotingUtil.parseRemoteAddress(ctx.channel()));
         super.disconnect(ctx, promise);
@@ -99,6 +111,8 @@ public class ConnectionEventHandler extends ChannelDuplexHandler {
 
     /**
      * @see io.netty.channel.ChannelDuplexHandler#close(io.netty.channel.ChannelHandlerContext, io.netty.channel.ChannelPromise)
+     *
+     *  本端主动关闭后，会调用close，客户端和服务端都调用
      */
     @Override
     public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
@@ -112,6 +126,8 @@ public class ConnectionEventHandler extends ChannelDuplexHandler {
 
     /**
      * @see io.netty.channel.ChannelInboundHandlerAdapter#channelRegistered(io.netty.channel.ChannelHandlerContext)
+     *
+     * Channel注册到EventLoop，可以开始接送IO请求，即不在IO线程中，客户端和服务端都调用
      */
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
@@ -119,6 +135,7 @@ public class ConnectionEventHandler extends ChannelDuplexHandler {
         super.channelRegistered(ctx);
     }
 
+    // Channel从EventLoop取消注册，此时不能接收IO请求，客户端和服务端都调用
     @Override
     public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
         infoLog("Connection channel unregistered: {}",
@@ -126,12 +143,14 @@ public class ConnectionEventHandler extends ChannelDuplexHandler {
         super.channelUnregistered(ctx);
     }
 
+    // Channel已经连接到远程服务器，准备好接收数据，客户端和服务端都调用
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         infoLog("Connection channel active: {}", RemotingUtil.parseRemoteAddress(ctx.channel()));
         super.channelActive(ctx);
     }
 
+    // channel不活跃，连接丢失，如果是客户端进行重连，客户端和服务端都调用
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         String remoteAddress = RemotingUtil.parseRemoteAddress(ctx.channel());
@@ -140,7 +159,8 @@ public class ConnectionEventHandler extends ChannelDuplexHandler {
         Attribute attr = ctx.channel().attr(Connection.CONNECTION);
         if (null != attr) {
             // add reconnect task
-            if (this.globalSwitch.isOn(GlobalSwitch.CONN_RECONNECT_SWITCH)) {
+            if (this.globalSwitch != null
+                && this.globalSwitch.isOn(GlobalSwitch.CONN_RECONNECT_SWITCH)) {
                 Connection conn = (Connection) attr.get();
                 if (reconnectManager != null) {
                     reconnectManager.addReconnectTask(conn.getUrl());
@@ -151,6 +171,7 @@ public class ConnectionEventHandler extends ChannelDuplexHandler {
         }
     }
 
+    // Channel.fireUserEventTriggered触发，客户端和服务端都调用
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object event) throws Exception {
         if (event instanceof ConnectionEventType) {
@@ -174,6 +195,7 @@ public class ConnectionEventHandler extends ChannelDuplexHandler {
         }
     }
 
+    //客户端和服务端都调用
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         final String remoteAddress = RemotingUtil.parseRemoteAddress(ctx.channel());
@@ -205,7 +227,7 @@ public class ConnectionEventHandler extends ChannelDuplexHandler {
 
     /**
      * Getter method for property <tt>listener</tt>.
-     * 
+     *
      * @return property value of listener
      */
     public ConnectionEventListener getConnectionEventListener() {
@@ -214,7 +236,7 @@ public class ConnectionEventHandler extends ChannelDuplexHandler {
 
     /**
      * Setter method for property <tt>listener</tt>.
-     * 
+     *
      * @param listener value to be assigned to property listener
      */
     public void setConnectionEventListener(ConnectionEventListener listener) {
@@ -228,7 +250,7 @@ public class ConnectionEventHandler extends ChannelDuplexHandler {
 
     /**
      * Getter method for property <tt>connectionManager</tt>.
-     * 
+     *
      * @return property value of connectionManager
      */
     public ConnectionManager getConnectionManager() {
@@ -237,7 +259,7 @@ public class ConnectionEventHandler extends ChannelDuplexHandler {
 
     /**
      * Setter method for property <tt>connectionManager</tt>.
-     * 
+     *
      * @param connectionManager value to be assigned to property connectionManager
      */
     public void setConnectionManager(ConnectionManager connectionManager) {
@@ -255,7 +277,7 @@ public class ConnectionEventHandler extends ChannelDuplexHandler {
 
     /**
      * Dispatch connection event.
-     * 
+     *
      * @author jiangping
      * @version $Id: ConnectionEventExecutor.java, v 0.1 Mar 4, 2016 9:20:15 PM tao Exp $
      */
@@ -267,7 +289,7 @@ public class ConnectionEventHandler extends ChannelDuplexHandler {
 
         /**
          * Process event.
-         * 
+
          * @param event
          */
         public void onEvent(Runnable event) {

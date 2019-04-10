@@ -34,7 +34,7 @@ import com.alipay.remoting.rpc.protocol.SyncUserProcessor;
 
 /**
  * a demo user processor for rpc server
- * 
+ *
  * @author xiaomin.cxm
  * @version $Id: SimpleServerUserProcessor.java, v 0.1 Jan 7, 2016 3:01:49 PM xiaomin.cxm Exp $
  */
@@ -99,6 +99,7 @@ public class SimpleServerUserProcessor extends SyncUserProcessor<RequestBody> {
 
         if (bizCtx.isRequestTimeout()) {
             String errMsg = "Stop process in server biz thread, already timeout!";
+            processTimes(request);
             logger.warn(errMsg);
             throw new Exception(errMsg);
         }

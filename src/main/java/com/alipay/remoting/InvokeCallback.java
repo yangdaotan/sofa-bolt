@@ -20,7 +20,7 @@ import java.util.concurrent.Executor;
 
 /**
  * Invoke callback.
- * 
+ *
  * @author jiangping
  * @version $Id: InvokeCallback.java, v 0.1 2015-9-30 AM10:24:26 tao Exp $
  */
@@ -28,23 +28,25 @@ public interface InvokeCallback {
 
     /**
      * Response received.
-     * 
+     *
      * @param result
      */
-    public void onResponse(final Object result);
+    void onResponse(final Object result);
 
     /**
      * Exception caught.
-     * 
+     *
      * @param e
      */
-    public void onException(final Throwable e);
+    void onException(final Throwable e);
 
     /**
      * User defined executor.
-     * 
+     *
+     *   callBack返回
+     *
      * @return
      */
-    public Executor getExecutor();
+    Executor getExecutor();
 
 }

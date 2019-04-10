@@ -28,7 +28,7 @@ import io.netty.channel.ChannelHandlerContext;
 
 /**
  * Wrap the ChannelHandlerContext.
- * 
+ *
  * @author jiangping
  * @version $Id: RemotingContext.java, v 0.1 2015-9-6 PM5:50:07 tao Exp $
  */
@@ -56,7 +56,7 @@ public class RemotingContext {
 
     /**
      * Constructor.
-     * 
+     *
      * @param ctx
      */
     public RemotingContext(ChannelHandlerContext ctx) {
@@ -104,7 +104,7 @@ public class RemotingContext {
 
     /**
      * Wrap the writeAndFlush method.
-     * 
+     *
      * @param msg
      * @return
      */
@@ -114,7 +114,7 @@ public class RemotingContext {
 
     /**
      * whether this request already timeout
-     * 
+     *
      * @return
      */
     public boolean isRequestTimeout() {
@@ -127,16 +127,16 @@ public class RemotingContext {
 
     /**
      * The server side
-     * 
+     *
      * @return
      */
     public boolean isServerSide() {
         return this.serverSide;
     }
 
-    /** 
+    /**
      * Get user processor for class name.
-     * 
+     *
      * @param className
      * @return
      */
@@ -146,7 +146,7 @@ public class RemotingContext {
 
     /**
      * Get connection from channel
-     * 
+     *
      * @return
      */
     public Connection getConnection() {
@@ -230,7 +230,7 @@ public class RemotingContext {
     }
 
     public RemotingContext setTimeoutDiscard(boolean failFastEnabled) {
-        this.timeoutDiscard = timeoutDiscard;
+        this.timeoutDiscard = failFastEnabled;
         return this;
     }
 }
